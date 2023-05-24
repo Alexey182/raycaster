@@ -1,0 +1,36 @@
+{
+    "vertex_shader": [
+                      "#version 330\n",
+                      "layout (location = 0) in vec2 aPos;",
+                      "layout (location = 1) in vec2 aNormal;",
+                      "layout (location = 2) in vec2 aTexCoord;",
+                      "layout (location = 3) in float aDist;",
+                      "out vec2 Normal;", 
+                      "out vec2 TexCoord;",
+                      "out float Dist;",
+                      "void main()",
+                      "{",
+                      "   gl_Position = vec4(aPos.x/320-1, 1 - aPos.y/240, 0.0, 1.0);",
+                      "   Normal = aNormal;",
+                      "   TexCoord = aTexCoord;",
+                      "   Dist = aDist;",
+                      "}"
+    ],
+    "fragment_shader": [
+                        "#version 330\n",
+                        "out vec4 FragColor;",
+                        "in vec2 Normal;",
+                        "in vec2 TexCoord;",
+                        "in float Dist; ",
+                        "uniform sampler2D myTexture;",
+                        "void main()",
+                        "{",
+                        "    vec2 light = normalize(vec2(-1.0, 1.0));",
+                        "    vec2 norm = normalize(Normal);",
+                        "    float attenuation = 0.3 + 0.7 * max(dot(light, norm), 0.0);",
+                        "    FragColor = texture(myTexture, TexCoord) * attenuation;",
+                        "}"
+    ],
+    "textures": [ [1, "texture.jpg"], [2, "texture1.jpg"], [3, "texture3.jpg" ] ],
+    "walls": [ [0, 0, 1, 1, 1] ]
+}
