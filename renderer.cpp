@@ -3,42 +3,31 @@
 #include <iostream>
 #include <boost/json.hpp>
 
-Renderer::Renderer()
-{
-    /*const std::string vertex_shader = "#version 330\n" \
-                                      "layout (location = 0) in vec2 aPos;" \
-                                      "layout (location = 1) in vec2 aNormal;" \
-                                      "layout (location = 2) in vec2 aTexCoord;" \
-                                      "layout (location = 3) in float aDist;" \
-                                      "out vec2 Normal;" \
-                                      "out vec2 TexCoord;" \
-                                      "out float Dist;" \
-                                      "void main()" \
-                                      "{" \
-                                      "   gl_Position = vec4(aPos.x/320-1, 1 - aPos.y/240, 0.0, 1.0);" \
-                                      "   Normal = aNormal;"\
-                                      "   TexCoord = aTexCoord;"\
-                                      "   Dist = aDist;"\
-                                      "}";
-    const std::string fragment_shader = "#version 330\n" \
-                                        "out vec4 FragColor;" \
-                                        "in vec2 Normal;" \
-                                        "in vec2 TexCoord;" \
-                                        "in float Dist; " \
-                                        "uniform sampler2D myTexture;" \
-                                        "void main()" \
-                                        "{" \
-                                        "    vec2 light = normalize(vec2(-1.0, 1.0));" \
-                                        "    vec2 norm = normalize(Normal);" \
-                                        "    float attenuation = 0.3 + 0.7 * max(dot(light, norm), 0.0);" \
-                                        "    FragColor = texture(myTexture, TexCoord) * attenuation;" \
-                                        "}";
-    bool buildResult = buildShader(vertex_shader, _vertexShader, GL_VERTEX_SHADER);
-    if(buildResult) {
-        buildResult = buildShader(fragment_shader, _fragmentShader, GL_FRAGMENT_SHADER);
-    }
 
-    if(buildResult) {
+void ShaderProgram::buildShader(const std::string &src, unsigned int &shader_id, unsigned int shader_type)
+{
+    shader_id = glCreateShader(shader_type);
+    const char *sources[1];
+    int lengths[1];
+    char error[1024];
+    int success = 0;
+    sources[0] = src.c_str();
+    lengths[0] = src.length();
+    glShaderSource(shader_id, 1, sources, lengths);
+    glCompileShader(shader_id);
+    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
+    if(!success) {
+        glGetShaderInfoLog(shader_id, sizeof(error), nullptr, error);
+        throw ShaderException(std::string("Build error: ") + error);
+    }
+}
+
+void ShaderProgram::loadShaders(const std::string &vertex_shader, const std::string &fragment_shader)
+{
+    try {
+        buildShader(vertex_shader, _vertexShader, GL_VERTEX_SHADER);
+        buildShader(fragment_shader, _fragmentShader, GL_FRAGMENT_SHADER);
+
         int success = 0;
         char error[1024];
         _shaderProgram = glCreateProgram();
@@ -48,10 +37,21 @@ Renderer::Renderer()
         glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &success);
         if(!success) {
             glGetProgramInfoLog(_shaderProgram, GL_LINK_STATUS, nullptr, error);
-            std::cout << "Link error: " << error << std::endl;
+            throw ShaderException(std::string("Link error: ") + error);
         }
-    }*/
+    } catch(ShaderException &se) {
+        std::cerr << se.what() << std::endl;
+        exit(1);
+    }
+}
 
+void ShaderProgram::use()
+{
+    glUseProgram(_shaderProgram);
+}
+
+Renderer::Renderer()
+{
     glGenVertexArrays(1, &_VAO);
     glGenBuffers(1, &_VBO);
     glBindVertexArray(_VAO);
@@ -69,27 +69,6 @@ Renderer::Renderer()
     addTexture(1, "texture.jpg");
     addTexture(2, "texture1.jpg");
     addTexture(3, "texture2.jpg");
-}
-
-bool Renderer::buildShader(const std::string &src, unsigned int &shader_id, unsigned int shader_type)
-{
-    shader_id = glCreateShader(shader_type);
-    const char *sources[1];
-    int lengths[1];
-    char error[1024];
-    int success = 0;
-    sources[0] = src.c_str();
-    lengths[0] = src.length();
-    glShaderSource(shader_id, 1, sources, lengths);
-    glCompileShader(shader_id);
-    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
-    if(!success) {
-        glGetShaderInfoLog(shader_id, sizeof(error), nullptr, error);
-        std::cout << "Error : " << error << std::endl;
-        return false;
-    }
-
-    return true;
 }
 
 void Renderer::Prepare(void *data, int size)
@@ -116,9 +95,9 @@ void Renderer::addTexture(int texture_id, const std::string &filename)
 
 void Renderer::useTexture(int texture_id)
 { 
-    glUseProgram(_shaderProgram);
+    _shaderProgram.use();
     glBindTexture(GL_TEXTURE_2D, _textures[texture_id]); 
-    glUniform1i(glGetUniformLocation(_shaderProgram, "myTexture"), 0);
+    glUniform1i(glGetUniformLocation(_shaderProgram.getHandle(), "myTexture"), 0);
 }
 
 void Renderer::Render()
@@ -131,24 +110,7 @@ void Renderer::Render()
 
 void Renderer::loadShaders(const std::string &vertex_shader, const std::string &fragment_shader)
 {
-    bool buildResult = buildShader(vertex_shader, _vertexShader, GL_VERTEX_SHADER);
-    if(buildResult) {
-        buildResult = buildShader(fragment_shader, _fragmentShader, GL_FRAGMENT_SHADER);
-    }
-
-    if(buildResult) {
-        int success = 0;
-        char error[1024];
-        _shaderProgram = glCreateProgram();
-        glAttachShader(_shaderProgram, _vertexShader);
-        glAttachShader(_shaderProgram, _fragmentShader);
-        glLinkProgram(_shaderProgram);
-        glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &success);
-        if(!success) {
-            glGetProgramInfoLog(_shaderProgram, GL_LINK_STATUS, nullptr, error);
-            std::cout << "Link error: " << error << std::endl;
-        }
-    }
+    _shaderProgram.loadShaders(vertex_shader, fragment_shader);
 }
 void Renderer::loadShaders(const boost::json::value &json_object)
 {
