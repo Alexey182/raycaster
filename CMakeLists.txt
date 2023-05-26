@@ -13,6 +13,7 @@ include_directories(include glad/include)
 set(raycaster_SRC
     glad/src/glad.c
     main.cpp
+    auxiliary.cpp
     scene.cpp
     renderer.cpp
    )

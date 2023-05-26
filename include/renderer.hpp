@@ -1,6 +1,7 @@
 #ifndef RENDERER_HPP
 #define RENDERER_HPP
 
+#include <iostream>
 #include <string>
 #include <memory>
 #include <map>
@@ -21,6 +22,14 @@ struct __attribute__((__packed__)) Point {
     float _dist;
 };
 
+class Texture
+{
+public:
+    Texture(std::string& filename);
+private:
+    unsigned int _texture;
+};
+
 class ShaderException : public std::exception
 {
 public:
@@ -33,9 +42,15 @@ private:
 class ShaderProgram
 {
 public:
+    ShaderProgram() = default;
+    ShaderProgram(ShaderProgram &&) = default;
+    ShaderProgram& operator=(ShaderProgram &&) = default;
     void loadShaders(const std::string &vertex_shader, const std::string &fragment_shader);
     unsigned int getHandle() { return _shaderProgram; }
     void use();
+    void dump() { std::cout << _vertexShader << ", " << _fragmentShader << ", " << _shaderProgram << std::endl; }
+    ShaderProgram(const ShaderProgram&) = delete;
+    ShaderProgram& operator=(const ShaderProgram&) = delete;
 
 private:
     void buildShader(const std::string &src, unsigned int &shader_id, unsigned int shader_type);
@@ -49,16 +64,11 @@ private:
 class Renderer
 {
 public:
-    Renderer();
+    Renderer(ShaderProgram &sp);
     void Render();
     void Prepare(void *data, int size);
     void addTexture(int texture_id, const std::string &filename);
     void useTexture(int texture_id);
-    void loadShaders(const std::string &vertex_shader, const std::string &fragment_shader);
-    void loadShaders(const boost::json::value &json_object);
-
-private:
-    std::string getShaderStr(const boost::json::value &v);
 
 private:
     ShaderProgram _shaderProgram;

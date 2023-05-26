@@ -1,57 +1,14 @@
 #include "renderer.hpp"
 
 #include <iostream>
-#include <fstream>
 #include <filesystem>
 #include <cmath>
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
-#include <boost/json.hpp>
 
 #include "scene.hpp"
+#include "auxiliary.hpp"
 
-namespace json = boost::json;
-
-json::value parseJSON(const std::string &json_filename)
-{
-    char buf[1024];
-    json::stream_parser map_parser;
-    json::error_code ec;
-    std::cout << std::filesystem::canonical(json_filename).parent_path() << std::endl;
-    std::ifstream map_stream(json_filename, std::ifstream::binary);
-
-    while(!map_stream.eof()) {
-        map_stream.read(buf, sizeof(buf));
-        map_parser.write(buf, map_stream.gcount(), ec);
-    }
-
-    map_stream.close();
-    map_parser.finish(ec);
-
-    if(ec) {
-        std::cout << "Unable to parse JSON file " << json_filename << std::endl;
-        return nullptr;
-    }
-
-    return map_parser.release();
-}
-
-std::string getShaderStr(const json::value &v)
-{
-    if(!v.is_array()) {
-        return nullptr;
-    }
-
-    const auto lines = v.as_array();
-
-    std::string result;
-
-    for(auto &l : lines) {
-        result += l.as_string();
-    }
-
-    return result;
-}
 
 int main(int argc, char **argv)
 {
@@ -60,8 +17,7 @@ int main(int argc, char **argv)
         return 1;
     }
     std::cout << "Map file: " << argv[1] << std::endl;
-    auto const json_value = parseJSON(argv[1]);
-    std::cout << getShaderStr(json_value.as_object().at("vertex_shader")) << std::endl;
+    JSONReader::getInstance().read(argv[1]);
     Camera cam;
     int screen_width = 640;
     int screen_height = 480;
@@ -70,8 +26,10 @@ int main(int argc, char **argv)
     wnd.setActive(true);
     gladLoadGL();
 
-    Renderer r;
-    r.loadShaders(json_value);
+    ShaderProgram shader_program;
+    JSONReader::getInstance().injectShader<ShaderProgram>(shader_program);
+    Renderer r(shader_program);
+    shader_program.dump();
     Map m(cam, r);
 
     std::cout << "GL Renderer: " << glGetString(GL_RENDERER) << std::endl;

@@ -50,7 +50,8 @@ void ShaderProgram::use()
     glUseProgram(_shaderProgram);
 }
 
-Renderer::Renderer()
+Renderer::Renderer(ShaderProgram &sp)
+    : _shaderProgram(std::move(sp))
 {
     glGenVertexArrays(1, &_VAO);
     glGenBuffers(1, &_VBO);
@@ -106,43 +107,4 @@ void Renderer::Render()
     glBindVertexArray(_VAO);
     glDrawArrays(GL_LINES, 0, _bytesInBuffer / sizeof(Point));
     _bytesInBuffer = 0;
-}
-
-void Renderer::loadShaders(const std::string &vertex_shader, const std::string &fragment_shader)
-{
-    _shaderProgram.loadShaders(vertex_shader, fragment_shader);
-}
-void Renderer::loadShaders(const boost::json::value &json_object)
-{
-    if(!json_object.is_object()) {
-        return;
-    }
-
-    const auto &obj = json_object.as_object();
-
-    try {
-        auto vertex_shader =  getShaderStr(obj.at("vertex_shader"));
-        auto fragment_shader = getShaderStr(obj.at("fragment_shader"));
-
-        loadShaders(vertex_shader, fragment_shader);
-    } catch(std::exception &e) {
-        std::cout << "Exception: " << e.what() << std::endl;
-    }
-}
-
-std::string Renderer::getShaderStr(const boost::json::value &v)
-{
-    if(!v.is_array()) {
-        return nullptr;
-    }
-
-    const auto lines = v.as_array();
-
-    std::string result;
-
-    for(auto &l : lines) {
-        result += l.as_string();
-    }
-
-    return result;
 }
