@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 project(raycaster)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS -g)
 set(SFML_BUILD_AUDIO FALSE)

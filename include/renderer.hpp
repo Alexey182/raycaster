@@ -6,14 +6,13 @@
 #include <memory>
 #include <map>
 #include <exception>
+#include <utility>
 #include <glad/glad.h>
 
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics/Image.hpp>
 
-namespace boost::json {
-    class value;
-}
+class ShaderProgram;
 
 struct __attribute__((__packed__)) Point {
     int _x,_y;
@@ -25,7 +24,12 @@ struct __attribute__((__packed__)) Point {
 class Texture
 {
 public:
-    Texture(std::string& filename);
+    Texture(const std::string& filename);
+    Texture(const Texture&) = delete;
+    Texture& operator=(const Texture&) = delete;
+    Texture(Texture &&t) { _texture = std::exchange(t._texture, 0); }
+    Texture& operator=(Texture &&t) { _texture = std::exchange(t._texture, 0); return *this; }
+    void use(ShaderProgram &shader, const char *name);
 private:
     unsigned int _texture;
 };
@@ -76,7 +80,7 @@ private:
     unsigned int _VAO, _VBO;
     Point *_lines;
     int _bytesInBuffer = 0;
-    std::map<int, unsigned int> _textures;
+    std::map<int, Texture> _textures;
     friend class Map;
 };
 

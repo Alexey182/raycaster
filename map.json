@@ -31,6 +31,6 @@
                         "    FragColor = texture(myTexture, TexCoord) * attenuation;",
                         "}"
     ],
-    "textures": [ [0, "default.png"], [1, "texture.jpg"], [2, "texture1.jpg"], [3, "texture2.jpg" ] ],
+    "textures": [ [0, "default.png"], [1, "texture.jpg"], [2, "texture2.jpg"], [3, "texture1.jpg" ] ],
     "walls": [ [0, 0, 1, 1, 1] ]
 }

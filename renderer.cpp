@@ -1,8 +1,25 @@
 #include "renderer.hpp"
 #include <SFML/Graphics.hpp>
 #include <iostream>
-#include <boost/json.hpp>
 
+Texture::Texture(const std::string &filename)
+{
+    sf::Image texImage;
+    glGenTextures(1,  &_texture);
+    glBindTexture(GL_TEXTURE_2D, _texture);
+    texImage.loadFromFile(filename);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texImage.getSize().x, texImage.getSize().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, texImage.getPixelsPtr());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+void Texture::use(ShaderProgram &shader, const char *name)
+{
+    glBindTexture(GL_TEXTURE_2D, _texture);
+    glUniform1i(glGetUniformLocation(shader.getHandle(), name), 0);
+}
 
 void ShaderProgram::buildShader(const std::string &src, unsigned int &shader_id, unsigned int shader_type)
 {
@@ -65,11 +82,6 @@ Renderer::Renderer(ShaderProgram &sp)
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(3,1, GL_FLOAT, GL_FALSE, sizeof(Point), (void*)&(((Point*)0)->_dist));
     glEnableVertexAttribArray(3);
-
-    addTexture(0, "default.png");
-    addTexture(1, "texture.jpg");
-    addTexture(2, "texture1.jpg");
-    addTexture(3, "texture2.jpg");
 }
 
 void Renderer::Prepare(void *data, int size)
@@ -81,24 +93,13 @@ void Renderer::Prepare(void *data, int size)
 
 void Renderer::addTexture(int texture_id, const std::string &filename)
 {
-    unsigned int tex;
-    sf::Image texImage;
-    glGenTextures(1,  &tex);
-    _textures[texture_id] = tex;
-    glBindTexture(GL_TEXTURE_2D, tex);
-    texImage.loadFromFile(filename);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texImage.getSize().x, texImage.getSize().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, texImage.getPixelsPtr());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    _textures.try_emplace(texture_id, Texture(filename));
 }
 
 void Renderer::useTexture(int texture_id)
 { 
     _shaderProgram.use();
-    glBindTexture(GL_TEXTURE_2D, _textures[texture_id]); 
-    glUniform1i(glGetUniformLocation(_shaderProgram.getHandle(), "myTexture"), 0);
+    _textures.at(texture_id).use(_shaderProgram, "myTexture");
 }
 
 void Renderer::Render()

@@ -21,6 +21,18 @@ public:
        }
     }
 
+    template<class Renderer> void injectTextures(Renderer &renderer) {
+        try {
+            auto textures = _jsonData.as_object().at("textures").as_array();
+            for(auto &t : textures) {
+                renderer.addTexture(t.at(0).as_int64(), t.at(1).as_string().c_str());
+            }
+        } catch(std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            exit(1);
+        }
+    }
+
     JSONReader(const JSONReader&) = delete;
     void operator=(const JSONReader&) = delete;
 

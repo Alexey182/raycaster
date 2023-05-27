@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     ShaderProgram shader_program;
     JSONReader::getInstance().injectShader<ShaderProgram>(shader_program);
     Renderer r(shader_program);
-    shader_program.dump();
+    JSONReader::getInstance().injectTextures<Renderer>(r);
     Map m(cam, r);
 
     std::cout << "GL Renderer: " << glGetString(GL_RENDERER) << std::endl;
