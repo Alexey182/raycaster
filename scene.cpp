@@ -73,27 +73,6 @@ Map::Map(Camera &cam, Renderer& r)
     : _cam(cam)
     , _renderer(r)
 {
-    _walls = { 
-               Wall(-5.0, 2.5, -5.0, -2.5, 2),
-               Wall(-2.5, 5.0, -5.0, 2.5, 2),
-               Wall(2.5, 5.0, -2.5, 5.0, 2),
-               Wall(5.0, 2.5, 2.5, 5.0, 2),
-
-               Wall(-3.0, 1.5, -3.0, 3.0, 1), 
-               Wall(-3.0, 3.0, -1.5, 3.0, 0), 
-               Wall(-1.5, 3.0, -1.5, 1.5, 1), 
-               Wall(-1.5, 1.5, -3.0, 1.5, 3),
-
-               Wall(1.5, 1.5, 1.5, 3.0, 1), 
-               Wall(1.5, 3.0, 3.0, 3.0, 0), 
-               Wall(3.0, 3.0, 3.0, 1.5, 1), 
-               Wall(3.0, 1.5, 1.5, 1.5, 3),
-
-               Wall(-0.5, 2.0, -0.5, 3.5, 1), 
-               Wall(-0.5, 3.5, 0.5, 3.5, 1), 
-               Wall(0.5, 3.5, 0.5, 2.0, 1), 
-               Wall(0.5, 2.0, -0.5, 2.0, 1)
-             };
 }
 
 
@@ -175,33 +154,7 @@ void Map::render(int screen_width, int screen_height)
     }
 }
 
-void Map::loadMap(const char *filename)
+void Map::addWall(const Wall &wall)
 {
-    char buf[10];
-    json::stream_parser map_parser;
-    json::error_code ec;
-    std::cout << std::filesystem::canonical(filename).parent_path() << std::endl;
-    std::ifstream map_stream(filename, std::ifstream::binary);
-
-    while(!map_stream.eof()) {
-        map_stream.read(buf, sizeof(buf));
-        map_parser.write(buf, map_stream.gcount(), ec);
-    }
-
-    map_stream.close();
-    map_parser.finish(ec);
-
-    if(ec) {
-        std::cout << "Unable to parse JSON file " << filename << std::endl;
-        return;
-    }
-
-    json::value v = map_parser.release();
-
-    auto const& obj = v.get_object();
-    if( !obj.empty() ) {
-        for(auto it = obj.begin(); it != obj.end(); it++) {
-            std::cout << it->key() << std::endl;
-        }
-    }
+    _walls.emplace_back(wall);
 }

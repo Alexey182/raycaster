@@ -51,7 +51,7 @@ public:
     Map(Camera &cam, Renderer &r);
     float findNearestIntersectionPoint(float angle, Normal &norm, float &pos, int &texture_id);
     void render(int screen_width, int screen_height);
-    void loadMap(const char *filename);
+    void addWall(const Wall &wall);
 private:
     Map() = delete;
     std::vector<Wall> _walls;

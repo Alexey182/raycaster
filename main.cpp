@@ -31,6 +31,7 @@ int main(int argc, char **argv)
     Renderer r(shader_program);
     JSONReader::getInstance().injectTextures<Renderer>(r);
     Map m(cam, r);
+    JSONReader::getInstance().injectWalls(m);
 
     std::cout << "GL Renderer: " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
